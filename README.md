@@ -21,8 +21,8 @@ echo '"def helloworl"' | cargo run --example rand-infer
 
 ## License
 
-- &copy; 2023 Chielo Newctle \<[ChieloNewctle@gmail.com](mailto:ChieloNewctle@gmail.com)\>
-- &copy; 2023 ModelTC Team
+- &copy; 2024 Chielo Newctle \<[ChieloNewctle@gmail.com](mailto:ChieloNewctle@gmail.com)\>
+- &copy; 2024 ModelTC Team
 
 This project is licensed under either of
 
