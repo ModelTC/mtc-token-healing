@@ -15,6 +15,10 @@ See [`examples/rand-infer.rs`](examples/rand-infer.rs).
 echo '"def helloworl"' | cargo run --example rand-infer
 ```
 
+```sh
+echo '"def hellowor<unk>l"' | cargo run --example rand-infer
+```
+
 ## TODOs
 
 - [ ] Python bindings
