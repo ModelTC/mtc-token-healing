@@ -4,11 +4,7 @@ permissions:
   pull-requests: write
   contents: write
 
-on:
-  workflow_run:
-    workflows: [Cargo Build & Test, Build & Test the Python Bindings]
-    types: [completed]
-    branches: [main]
+on: workflow_dispatch
 
 jobs:
   release-plz:
