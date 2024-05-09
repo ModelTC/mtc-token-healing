@@ -6,7 +6,7 @@ permissions:
 
 on:
   workflow_run:
-    workflows: [Cargo Build & Test]
+    workflows: [Cargo Build & Test, Build & Test the Python Bindings]
     types: [completed]
     branches: [main]
 
