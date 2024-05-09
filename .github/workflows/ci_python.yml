@@ -1,4 +1,4 @@
-name: Cargo Build & Test the Python Bindings
+name: Build & Test the Python Bindings
 
 defaults:
   run:

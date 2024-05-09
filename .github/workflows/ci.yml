@@ -1,4 +1,4 @@
-name: Cargo Build & Test the Crate
+name: Cargo Build & Test
 
 on:
   push:
