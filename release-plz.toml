@@ -1,3 +1,12 @@
 [workspace]
 changelog_update = false
 dependencies_update = true
+
+[[package]]
+name = "mtc-token-healing-py"
+release = false
+semver_check = false
+changelog_update = false
+git_release_enable = false
+git_tag_enable = false
+publish = false
