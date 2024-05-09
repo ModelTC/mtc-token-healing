@@ -99,7 +99,7 @@ mod _pyo3 {
             Self(Arc::new(VocabPrefixAutomaton::new(vocab)))
         }
 
-        #[pyo3(name = "vocab_size")]
+        #[getter("vocab_size")]
         fn vocab_size_py(&self) -> usize {
             self.vocab.len()
         }
