@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "pypy3.10"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "pypy3.9", "pypy3.10"]
 
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +67,7 @@ jobs:
       - name: Test building wheels
         uses: PyO3/maturin-action@v1
         with:
+          working-directory: python
           sccache: true
           manylinux: auto
 
@@ -81,19 +82,20 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.9"
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          working-directory: python
           target: ${{ matrix.target }}
-          args: --release --out dist --interpreter 3.8 pypy3.8 pypy3.9 pypy3.10
+          args: --release --out dist --interpreter 3.9 pypy3.9 pypy3.10
           sccache: true
           manylinux: auto
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-linux-${{ matrix.target }}
-          path: dist
+          path: python/dist
       - name: pytest
         if: ${{ startsWith(matrix.target, 'x86_64') }}
         shell: bash
@@ -114,6 +116,7 @@ jobs:
             pip3 install -U pip
           run: |
             set -e
+            cd python
             pip3 install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
             pytest --import-mode=importlib
 
@@ -128,19 +131,20 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.9"
           architecture: ${{ matrix.target }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          working-directory: python
           target: ${{ matrix.target }}
-          args: --release --out dist --interpreter 3.8 pypy3.8 pypy3.9 pypy3.10
+          args: --release --out dist --interpreter 3.9 pypy3.9 pypy3.10
           sccache: true
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-windows-${{ matrix.target }}
-          path: dist
+          path: python/dist
       - name: pytest
         if: ${{ !startsWith(matrix.target, 'aarch64') }}
         shell: bash
@@ -160,18 +164,19 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.9"
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
+          working-directory: python
           target: ${{ matrix.target }}
-          args: --release --out dist --interpreter 3.8 pypy3.8 pypy3.9 pypy3.10
+          args: --release --out dist --interpreter 3.9 pypy3.9 pypy3.10
           sccache: true
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: wheels-macos-${{ matrix.target }}
-          path: dist
+          path: python/dist
       - name: pytest
         if: ${{ !startsWith(matrix.target, 'aarch64') }}
         shell: bash
@@ -190,13 +195,14 @@ jobs:
       - name: Build sdist
         uses: PyO3/maturin-action@v1
         with:
+          working-directory: python
           command: sdist
           args: --out dist
       - name: Upload sdist
         uses: actions/upload-artifact@v4
         with:
           name: wheels-sdist
-          path: dist
+          path: python/dist
 
   release:
     name: Release
