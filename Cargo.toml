@@ -1,5 +1,7 @@
-[package]
-name = "mtc-token-healing"
+[workspace]
+members = ["python"]
+
+[workspace.package]
 version = "0.1.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -7,6 +9,16 @@ description = "Token healing implementation"
 repository = "https://github.com/ModelTC/mtc-token-healing"
 homepage = "https://github.com/ModelTC/mtc-token-healing"
 documentation = "https://docs.rs/mtc-token-healing"
+
+[package]
+name = "mtc-token-healing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
 readme = "README.md"
 authors = ["Chielo Newctle <ChieloNewctle@gmail.com>"]
 exclude = ["release-plz.toml", ".github"]
@@ -32,3 +44,8 @@ tokio = { version = "1.37.0", features = ["rt-multi-thread"] }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[profile.release]
+lto = true
+strip = true
+opt-level = "z"
