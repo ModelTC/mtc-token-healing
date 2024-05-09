@@ -8,6 +8,7 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 authors.workspace = true
+publish = false
 
 [lib]
 name = "mtc_token_healing"
