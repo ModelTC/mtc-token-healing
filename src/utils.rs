@@ -4,8 +4,6 @@ use general_sam::{
     BTreeTransTable, BoxBisectTable, GeneralSam, TransitionTable, Trie, TrieNodeAlike,
     SAM_ROOT_NODE_ID,
 };
-#[cfg(feature = "pyo3")]
-use pyo3::pyclass;
 use smallvec::SmallVec;
 
 pub type TokenId = u32;
@@ -22,10 +20,40 @@ pub type TokenId = u32;
     PartialOrd,
     Ord,
 )]
+#[cfg_attr(feature = "pyo3", pyo3::pyclass)]
 pub struct ReorderedTokenId(pub u32);
 
+#[cfg(feature = "pyo3")]
+mod _pyo3 {
+    use pyo3::pymethods;
+
+    use crate::ReorderedTokenId;
+
+    #[pymethods]
+    impl ReorderedTokenId {
+        #[new]
+        fn new(value: u32) -> Self {
+            Self(value)
+        }
+
+        pub fn __int__(&self) -> u32 {
+            self.0
+        }
+
+        #[getter]
+        pub fn get_value(&self) -> u32 {
+            self.0
+        }
+
+        #[setter]
+        pub fn set_value(&mut self, value: u32) {
+            self.0 = value;
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-#[cfg_attr(feature = "pyo3", pyclass(get_all, set_all))]
+#[cfg_attr(feature = "pyo3", pyo3::pyclass(get_all, set_all))]
 pub struct CountInfo {
     pub cnt: usize,
     pub tot_cnt_lower: usize,

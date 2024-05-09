@@ -12,5 +12,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 
+[tool.maturin]
+
 [project.optional-dependencies]
 test = ["pytest"]

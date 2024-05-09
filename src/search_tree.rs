@@ -28,12 +28,14 @@ pub enum SearchTreeError {
 pub type SearchTreeResult<T> = Result<T, SearchTreeError>;
 
 #[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "pyo3", pyo3::pyclass(get_all, set_all))]
 pub struct Prediction {
     pub token_id: ReorderedTokenId,
     pub log_prob: f64,
 }
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "pyo3", pyo3::pyclass(get_all, frozen))]
 pub struct InferRequest {
     pub backtrace: usize,
     pub feed: Option<TokenId>,
@@ -42,6 +44,7 @@ pub struct InferRequest {
 }
 
 #[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "pyo3", pyo3::pyclass(get_all, set_all))]
 pub struct InferResponse {
     pub sampled: Option<Prediction>,
     pub sparse_choices: Vec<Prediction>,
@@ -56,6 +59,7 @@ struct SearchState {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "pyo3", pyo3::pyclass)]
 pub struct SearchTree {
     automaton: Arc<VocabPrefixAutomaton>,
 
@@ -300,5 +304,106 @@ impl SearchTree {
 
     pub fn max_num_tokens(&self) -> usize {
         self.max_num_tokens
+    }
+}
+
+#[cfg(feature = "pyo3")]
+mod _pyo3 {
+    use std::collections::BTreeMap;
+
+    use pyo3::{
+        exceptions::PyValueError, pymethods, types::PyType, Bound, PyErr, PyObject, PyRefMut,
+        PyResult, Python,
+    };
+
+    use crate::{
+        vocab::PyVocabPrefixAutomaton, BestChoice, InferRequest, InferResponse, Prediction,
+        ReorderedTokenId, SearchTree, SearchTreeError, TokenId,
+    };
+
+    use super::SearchTreeResult;
+
+    impl From<SearchTreeError> for PyErr {
+        fn from(value: SearchTreeError) -> Self {
+            PyValueError::new_err(value.to_string())
+        }
+    }
+
+    #[pymethods]
+    impl Prediction {
+        #[new]
+        pub fn new_py(token_id: ReorderedTokenId, log_prob: f64) -> Self {
+            Self { token_id, log_prob }
+        }
+    }
+
+    #[pymethods]
+    impl InferResponse {
+        #[new]
+        pub fn new_py(
+            sampled: Option<Prediction>,
+            sparse_choices: Option<Vec<Prediction>>,
+        ) -> Self {
+            Self {
+                sampled,
+                sparse_choices: sparse_choices.unwrap_or_default(),
+            }
+        }
+    }
+
+    #[pymethods]
+    impl SearchTree {
+        #[pyo3(name = "get_prefilled_token_ids")]
+        pub fn prefilled_token_ids_py(&self) -> Vec<TokenId> {
+            self.prefilled_token_ids.clone()
+        }
+
+        #[pyo3(name = "get_best_choice")]
+        pub fn get_best_choice_py(&self) -> SearchTreeResult<BestChoice> {
+            if self.best_choice.valid() {
+                Ok(self.best_choice.clone())
+            } else {
+                Err(SearchTreeError::NoSampledResult)
+            }
+        }
+
+        #[classmethod]
+        #[pyo3(name = "new")]
+        pub fn new_py(
+            _cls: &Bound<'_, PyType>,
+            py: Python<'_>,
+            automaton: &'_ PyVocabPrefixAutomaton,
+            tokenize_for_multiple_ending_positions: PyObject,
+            text: &str,
+            start_from: usize,
+        ) -> PyResult<Option<(Self, InferRequest)>> {
+            let pos_to_cnt_info =
+                BTreeMap::from_iter(automaton.as_ref().parse_chars(text, start_from));
+
+            let end_pos = Vec::from_iter(pos_to_cnt_info.keys().copied());
+
+            let encoded: Vec<(usize, Vec<TokenId>)> = tokenize_for_multiple_ending_positions
+                .call1(py, (end_pos,))?
+                .extract(py)?;
+
+            Ok(Self::from_encoded(
+                automaton.0.clone(),
+                pos_to_cnt_info,
+                encoded,
+            ))
+        }
+
+        #[pyo3(name = "feed")]
+        pub fn feed_py(
+            mut self_: PyRefMut<'_, Self>,
+            res: InferResponse,
+        ) -> SearchTreeResult<Option<InferRequest>> {
+            self_.feed(res)
+        }
+
+        #[getter("max_num_tokens")]
+        pub fn max_num_tokens_py(&self) -> usize {
+            self.max_num_tokens
+        }
     }
 }

@@ -1,0 +1,231 @@
+name: Cargo Build & Test the Python Bindings
+
+defaults:
+  run:
+    working-directory: python
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    name: Check Python format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+      - name: Install dependencies
+        run: pip install ruff black
+      - name: Ruff
+        run: ruff check .
+      - name: Black
+        run: black --check --diff .
+
+  rustfmt:
+    name: Check Rust format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: rustup update stable && rustup default stable
+      - run: rustup component add rustfmt
+      - run: cargo fmt --all --check
+
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "pypy3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install locally
+        run: pip install -e ".[test]"
+      - name: Install additional dependencies
+        run: pip install pytest-md pytest-emoji
+      - uses: pavelzw/pytest-action@v2
+        with:
+          emoji: false
+          verbose: true
+          job-summary: true
+      - name: Test building wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          sccache: true
+          manylinux: auto
+
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64, armv7]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --interpreter 3.8 pypy3.8 pypy3.9 pypy3.10
+          sccache: true
+          manylinux: auto
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.target }}
+          path: dist
+      - name: pytest
+        if: ${{ startsWith(matrix.target, 'x86_64') }}
+        shell: bash
+        run: |
+          set -e
+          pip install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
+          pytest --import-mode=importlib
+      - name: pytest
+        if: ${{ !startsWith(matrix.target, 'x86') && matrix.target != 'ppc64' }}
+        uses: uraimo/run-on-arch-action@v2.7.1
+        with:
+          arch: ${{ matrix.target }}
+          distro: ubuntu22.04
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update
+            apt-get install -y --no-install-recommends python3 python3-pip
+            pip3 install -U pip
+          run: |
+            set -e
+            pip3 install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
+            pytest --import-mode=importlib
+
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          architecture: ${{ matrix.target }}
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --interpreter 3.8 pypy3.8 pypy3.9 pypy3.10
+          sccache: true
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-${{ matrix.target }}
+          path: dist
+      - name: pytest
+        if: ${{ !startsWith(matrix.target, 'aarch64') }}
+        shell: bash
+        run: |
+          set -e
+          pip install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
+          pytest --import-mode=importlib
+
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --interpreter 3.8 pypy3.8 pypy3.9 pypy3.10
+          sccache: true
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-${{ matrix.target }}
+          path: dist
+      - name: pytest
+        if: ${{ !startsWith(matrix.target, 'aarch64') }}
+        shell: bash
+        run: |
+          set -e
+          pip install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
+          pytest --import-mode=importlib
+
+  sdist:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: "startsWith(github.ref, 'refs/tags/')"
+    needs: [test, format, rustfmt, linux, windows, macos, sdist]
+    permissions:
+      # Used to upload release artifacts
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+      - name: Publish to PyPI
+        uses: PyO3/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        with:
+          command: upload
+          args: --non-interactive --skip-existing *
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.whl
+            *.tar.gz
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}

@@ -1,6 +1,4 @@
 use general_sam::{BoxBisectTable, GeneralSam};
-#[cfg(feature = "pyo3")]
-use pyo3::pyclass;
 
 use crate::{
     utils::{build_sam_of_reversed_tokens, gen_sam_cnt_info, sort_vocab_with_trie, TokenBytes},
@@ -8,7 +6,6 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-#[cfg_attr(feature = "pyo3", pyclass)]
 pub struct VocabPrefixAutomaton {
     vocab: Vec<TokenBytes>,
     order: Vec<TokenId>,
@@ -83,17 +80,23 @@ impl VocabPrefixAutomaton {
 
 #[cfg(feature = "pyo3")]
 mod _pyo3 {
-    use pyo3::pymethods;
+    use std::sync::Arc;
 
-    use crate::utils::CountInfo;
+    use pyo3::{pyclass, pymethods};
+
+    use crate::{utils::CountInfo, ReorderedTokenId, TokenId};
 
     use super::VocabPrefixAutomaton;
 
+    #[derive(Clone, Debug, derive_more::Deref)]
+    #[pyclass(name = "VocabPrefixAutomaton", frozen)]
+    pub struct PyVocabPrefixAutomaton(pub Arc<VocabPrefixAutomaton>);
+
     #[pymethods]
-    impl VocabPrefixAutomaton {
+    impl PyVocabPrefixAutomaton {
         #[new]
-        fn py_new(vocab: Vec<Vec<u8>>) -> Self {
-            Self::new(vocab)
+        fn py_new(vocab: Vec<String>) -> Self {
+            Self(Arc::new(VocabPrefixAutomaton::new(vocab)))
         }
 
         #[pyo3(name = "vocab_size")]
@@ -102,21 +105,21 @@ mod _pyo3 {
         }
 
         #[pyo3(name = "get_order")]
-        fn get_order_py(&self) -> Vec<u32> {
+        fn get_order_py(&self) -> Vec<TokenId> {
             self.order.clone()
         }
 
         #[pyo3(name = "get_rank")]
-        fn get_rank_py(&self) -> Vec<u32> {
-            self.rank.iter().map(|x| x.0).collect()
+        fn get_rank_py(&self) -> Vec<ReorderedTokenId> {
+            self.rank.clone()
         }
 
         #[pyo3(name = "parse_chars")]
         fn parse_chars_py(&self, text: &str, start_from: usize) -> Vec<(usize, CountInfo)> {
             self.parse_chars(text, start_from)
-                .into_iter()
-                .map(|(pos, cnt_info)| (pos, cnt_info.clone()))
-                .collect()
         }
     }
 }
+
+#[cfg(feature = "pyo3")]
+pub use self::_pyo3::PyVocabPrefixAutomaton;

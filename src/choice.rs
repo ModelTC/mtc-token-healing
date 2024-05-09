@@ -1,6 +1,7 @@
 use crate::TokenId;
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "pyo3", pyo3::pyclass(get_all, frozen))]
 pub struct BestChoice {
     pub extra_token_ids: Vec<TokenId>,
     pub accum_log_prob: f64,
