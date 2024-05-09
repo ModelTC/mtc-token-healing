@@ -1,5 +1,7 @@
-[package]
-name = "mtc-token-healing"
+[workspace]
+members = ["python"]
+
+[workspace.package]
 version = "0.1.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -7,16 +9,27 @@ description = "Token healing implementation"
 repository = "https://github.com/ModelTC/mtc-token-healing"
 homepage = "https://github.com/ModelTC/mtc-token-healing"
 documentation = "https://docs.rs/mtc-token-healing"
-readme = "README.md"
 authors = ["Chielo Newctle <ChieloNewctle@gmail.com>"]
-exclude = ["release-plz.toml", ".github"]
+
+[package]
+name = "mtc-token-healing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+authors.workspace = true
+readme = "README.md"
+exclude = ["release-plz.toml", ".github", "python"]
 
 [dependencies]
 derive_more = "0.99.17"
 general-sam = { version = "1.0.0", features = ["trie"] }
 pyo3 = { version = "0.21.2", optional = true }
 smallvec = "1.13.2"
-thiserror = "1.0.59"
+thiserror = "1.0.60"
 
 [features]
 pyo3 = ["dep:pyo3"]
@@ -26,9 +39,14 @@ clap = { version = "4.5.4", features = ["derive", "env"] }
 color-eyre = "0.6.3"
 rand = "0.8.5"
 regex = "1.10.4"
-serde_json = "1.0.116"
+serde_json = "1.0.117"
 tokenizers = { version = "0.19.1", features = ["hf-hub", "http"] }
 tokio = { version = "1.37.0", features = ["rt-multi-thread"] }
 
 [package.metadata.docs.rs]
 all-features = true
+
+[profile.release]
+lto = true
+strip = true
+opt-level = "z"
