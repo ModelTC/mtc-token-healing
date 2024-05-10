@@ -21,7 +21,8 @@ echo '"def hellowor<unk>l"' | cargo run --example rand-infer
 
 ## TODOs
 
-- [ ] Python bindings
+- [x] Python bindings
+- [ ] Python docs, examples and tests
 
 ## License
 
