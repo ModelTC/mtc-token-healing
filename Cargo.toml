@@ -25,7 +25,7 @@ readme = "README.md"
 exclude = ["release-plz.toml", ".github", "python"]
 
 [dependencies]
-derive_more = "0.99.17"
+derive_more = "1.0.0"
 general-sam = { version = "1.0.0", features = ["trie"] }
 pyo3 = { version = "0.21.2", optional = true }
 smallvec = "1.13.2"
