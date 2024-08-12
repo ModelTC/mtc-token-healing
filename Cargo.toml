@@ -40,7 +40,7 @@ color-eyre = "0.6.3"
 rand = "0.8.5"
 regex = "1.10.4"
 serde_json = "1.0.117"
-tokenizers = { version = "0.19.1", features = ["hf-hub", "http"] }
+tokenizers = { version = "0.20.0", features = ["hf-hub", "http"] }
 tokio = { version = "1.37.0", features = ["rt-multi-thread"] }
 
 [package.metadata.docs.rs]
