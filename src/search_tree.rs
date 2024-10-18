@@ -340,6 +340,7 @@ mod _pyo3 {
     #[pymethods]
     impl InferResponse {
         #[new]
+        #[pyo3(signature = (sampled=None, sparse_choices=None))]
         pub fn new_py(
             sampled: Option<Prediction>,
             sparse_choices: Option<Vec<Prediction>>,
