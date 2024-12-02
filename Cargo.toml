@@ -27,7 +27,7 @@ exclude = ["release-plz.toml", ".github", "python"]
 [dependencies]
 derive_more = { version = "1.0.0", features = ["deref", "as_ref"] }
 general-sam = { version = "1.0.0", features = ["trie"] }
-pyo3 = { version = "0.22.5", optional = true }
+pyo3 = { version = "0.23.2", optional = true }
 smallvec = "1.13.2"
 thiserror = "1.0.64"
 
