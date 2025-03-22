@@ -105,18 +105,20 @@ jobs:
           pytest --import-mode=importlib
       - name: pytest
         if: ${{ !startsWith(matrix.target, 'x86') && matrix.target != 'ppc64' }}
-        uses: uraimo/run-on-arch-action@v2.7.2
+        uses: uraimo/run-on-arch-action@v3
         with:
           arch: ${{ matrix.target }}
-          distro: ubuntu22.04
+          distro: bookworm
           githubToken: ${{ github.token }}
           install: |
             apt-get update
-            apt-get install -y --no-install-recommends python3 python3-pip
-            pip3 install -U pip
+            apt-get install -y --no-install-recommends python3-full
           run: |
             set -e
             cd python
+            python -m venv venv
+            . venv/bin/activate
+            pip3 install -U pip
             pip3 install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
             pytest --import-mode=importlib
 
