@@ -1,7 +1,7 @@
 use std::sync::{Arc, OnceLock};
 
 use clap::Parser;
-use color_eyre::{eyre::eyre, Result};
+use color_eyre::{Result, eyre::eyre};
 use mtc_token_healing::{
     InferRequest, InferResponse, Prediction, ReorderedTokenId, SearchTree, TokenId,
     VocabPrefixAutomaton,

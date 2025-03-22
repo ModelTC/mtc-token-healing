@@ -1,8 +1,8 @@
 use std::convert::Infallible;
 
 use general_sam::{
-    BTreeTransTable, BoxBisectTable, GeneralSam, TransitionTable, Trie, TrieNodeAlike,
-    SAM_ROOT_NODE_ID,
+    BTreeTransTable, BoxBisectTable, GeneralSam, SAM_ROOT_NODE_ID, TransitionTable, Trie,
+    TrieNodeAlike,
 };
 use smallvec::SmallVec;
 

@@ -1,6 +1,6 @@
 use ::mtc_token_healing::{
-    vocab::PyVocabPrefixAutomaton, BestChoice, CountInfo, InferRequest, InferResponse, Prediction,
-    ReorderedTokenId, SearchTree,
+    BestChoice, CountInfo, InferRequest, InferResponse, Prediction, ReorderedTokenId, SearchTree,
+    vocab::PyVocabPrefixAutomaton,
 };
 use pyo3::prelude::*;
 
