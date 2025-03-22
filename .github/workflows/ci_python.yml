@@ -116,7 +116,7 @@ jobs:
           run: |
             set -e
             cd python
-            python -m venv venv
+            python3 -m venv venv
             . venv/bin/activate
             pip3 install -U pip
             pip3 install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
