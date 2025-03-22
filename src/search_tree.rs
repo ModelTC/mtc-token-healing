@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, future::Future, sync::Arc};
 
-use general_sam::{BTreeTransTable, Trie, TrieNodeID, TRIE_ROOT_NODE_ID};
+use general_sam::{BTreeTransTable, TRIE_ROOT_NODE_ID, Trie, TrieNodeID};
 
 use crate::{BestChoice, CountInfo, ReorderedTokenId, TokenId, VocabPrefixAutomaton};
 
@@ -312,13 +312,13 @@ mod _pyo3 {
     use std::collections::BTreeMap;
 
     use pyo3::{
-        exceptions::PyValueError, pymethods, types::PyType, Bound, PyErr, PyObject, PyRefMut,
-        PyResult, Python,
+        Bound, PyErr, PyObject, PyRefMut, PyResult, Python, exceptions::PyValueError, pymethods,
+        types::PyType,
     };
 
     use crate::{
-        vocab::PyVocabPrefixAutomaton, BestChoice, InferRequest, InferResponse, Prediction,
-        ReorderedTokenId, SearchTree, SearchTreeError, TokenId,
+        BestChoice, InferRequest, InferResponse, Prediction, ReorderedTokenId, SearchTree,
+        SearchTreeError, TokenId, vocab::PyVocabPrefixAutomaton,
     };
 
     use super::SearchTreeResult;

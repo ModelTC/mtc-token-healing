@@ -1,8 +1,8 @@
 use general_sam::{BoxBisectTable, GeneralSam};
 
 use crate::{
-    utils::{build_sam_of_reversed_tokens, gen_sam_cnt_info, sort_vocab_with_trie, TokenBytes},
     CountInfo, ReorderedTokenId, TokenId,
+    utils::{TokenBytes, build_sam_of_reversed_tokens, gen_sam_cnt_info, sort_vocab_with_trie},
 };
 
 #[derive(Clone, Debug)]
@@ -84,7 +84,7 @@ mod _pyo3 {
 
     use pyo3::{pyclass, pymethods};
 
-    use crate::{utils::CountInfo, ReorderedTokenId, TokenId};
+    use crate::{ReorderedTokenId, TokenId, utils::CountInfo};
 
     use super::VocabPrefixAutomaton;
 
