@@ -141,7 +141,7 @@ fn build_vocab<T: AsRef<Tokenizer>>(tokenizer: T) -> Result<Vec<Vec<u8>>> {
                 assert!(decoded.ends_with(&dummy_special_token.content));
 
                 let offset = dummy_special_token.content.len();
-                token_bytes[id as usize].extend(decoded[offset..decoded.len() - offset].as_bytes())
+                token_bytes[id as usize].extend(&decoded.as_bytes()[offset..decoded.len() - offset])
             }
         }
     }
@@ -179,13 +179,14 @@ async fn main_body() -> Result<()> {
     let offset = tokenized
         .get_ids()
         .iter()
-        .filter_map(|&id| {
+        .rev()
+        .copied()
+        .find_map(|id| {
             tokenizer
                 .get_added_vocabulary()
                 .get_added_tokens_decoder()
                 .get(&id)
         })
-        .last()
         .and_then(|special_token| {
             println!("{special_token:?}");
             text.rfind(&special_token.content)
