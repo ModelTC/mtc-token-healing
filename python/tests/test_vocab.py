@@ -2,7 +2,7 @@ from mtc_token_healing import VocabPrefixAutomaton
 
 
 def test_vocab_simple():
-    vocab = ["bcd", "abc", "cc", "hello", "world", " ", "yes", "no", "."]
+    vocab = [b"bcd", b"abc", b"cc", b"hello", b"world", b" ", b"yes", b"no", b"."]
     order = sorted(range(len(vocab)), key=lambda i: vocab[i])
 
     assert len(vocab) == len(order)

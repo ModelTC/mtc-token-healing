@@ -10,16 +10,13 @@
 //! Thus finding tokens prefixed with a string
 //! is the same as walking to the state on the suffix automaton
 //! and gathering information among the subtree of the link tree.
-pub mod choice;
-pub mod search_tree;
-pub mod utils;
-pub mod vocab;
+mod automaton;
+mod token;
+mod vocab_utils;
 
 pub use crate::{
-    choice::BestChoice,
-    search_tree::{InferRequest, InferResponse, Prediction, SearchTree, SearchTreeError},
-    utils::{CountInfo, ReorderedTokenId, TokenId},
-    vocab::VocabPrefixAutomaton,
+    automaton::VocabPrefixAutomaton,
+    token::{SortedTokenId, SortedTokenRange, TokenId},
 };
 
 #[cfg(test)]

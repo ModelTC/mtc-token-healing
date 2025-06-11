@@ -9,9 +9,9 @@ fn testcase_parse_chars<T: AsRef<str>>(
 ) {
     let text = text.as_ref();
     let res: BTreeSet<_> = automaton
-        .parse_chars(text, 0)
+        .parse_bytes(text, 0)
         .into_iter()
-        .map(|(pos, cnt_info)| (pos, cnt_info.tot_cnt_lower, cnt_info.tot_cnt_upper))
+        .map(|(pos, rank_range)| (pos, rank_range.lower, rank_range.upper))
         .collect();
     println!("{text}: {res:?}");
     for (pos, _) in text.char_indices() {
@@ -33,7 +33,7 @@ fn testcase_parse_chars<T: AsRef<str>>(
             });
         if let Some((lower, upper)) = range {
             println!("{pos}: {:?}", &vocab_sorted[lower..upper]);
-            assert!(res.contains(&(pos, lower, upper)));
+            assert!(res.contains(&(pos, lower as _, upper as _)));
         }
     }
 }
