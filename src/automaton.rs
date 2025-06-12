@@ -3,12 +3,12 @@ use general_sam::{BoxBisectTable, GeneralSam};
 
 use crate::{
     SortedTokenId, SortedTokenRange, TokenId,
-    vocab_utils::{
+    token::{
         build_sam_of_reversed_tokens, label_rank_range_on_sam_of_rev_tokens, sort_vocab_with_trie,
     },
 };
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 #[cfg_attr(feature = "pyo3", ::pyo3::pyclass(frozen))]
 pub struct VocabPrefixAutomaton {
     vocab: Vec<CompactBytes>,
@@ -28,12 +28,10 @@ impl VocabPrefixAutomaton {
         let sam_of_rev_tokens = build_sam_of_reversed_tokens(vocab.iter().map(|x| x.as_slice()));
         let cnt_info_of_sam_rev = label_rank_range_on_sam_of_rev_tokens(
             &sam_of_rev_tokens,
-            vocab.iter().map(|x| x.as_slice()).zip(
-                sort_result
-                    .cnt_info_of_vocab
-                    .into_iter()
-                    .map(|i| i.rank_range),
-            ),
+            vocab
+                .iter()
+                .map(|x| x.as_slice())
+                .zip(sort_result.rank_ranges),
         );
         Self {
             vocab,
