@@ -17,7 +17,7 @@ mod token;
 pub use crate::{
     automaton::VocabPrefixAutomaton,
     prefix_dfs::{TokenSeqInput, TokenSeqTrieNode, dfs_token_seq_trie},
-    token::{SortedTokenId, SortedTokenRange, TokenId},
+    token::{SmallToken, SortedTokenId, SortedTokenRange, TokenId},
 };
 
 #[cfg(test)]
