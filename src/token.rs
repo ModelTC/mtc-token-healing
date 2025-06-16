@@ -4,9 +4,12 @@ use general_sam::{
     BTreeTransTable, BoxBisectTable, GeneralSam, SAM_ROOT_NODE_ID, TransitionTable, TravelEvent,
     Trie, TrieNodeAlike,
 };
+use tinyvec::TinyVec;
 
 pub type TokenId = u32;
 pub type SortedTokenId = u32;
+
+pub type SmallToken = TinyVec<[u8; 29]>;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "pyo3", pyo3::pyclass(get_all, set_all))]

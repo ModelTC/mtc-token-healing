@@ -1,8 +1,7 @@
-use compact_bytes::CompactBytes;
 use general_sam::{BoxBisectTable, GeneralSam};
 
 use crate::{
-    SortedTokenId, SortedTokenRange, TokenId,
+    SmallToken, SortedTokenId, SortedTokenRange, TokenId,
     token::{
         build_sam_of_reversed_tokens, label_rank_range_on_sam_of_rev_tokens, sort_vocab_with_trie,
     },
@@ -11,7 +10,7 @@ use crate::{
 #[derive(Debug)]
 #[cfg_attr(feature = "pyo3", ::pyo3::pyclass(frozen))]
 pub struct VocabPrefixAutomaton {
-    vocab: Vec<CompactBytes>,
+    vocab: Vec<SmallToken>,
     order: Vec<TokenId>,
     rank: Vec<SortedTokenId>,
     sam_of_rev_tokens: GeneralSam<BoxBisectTable<u8>>,
@@ -22,7 +21,7 @@ impl VocabPrefixAutomaton {
     pub fn new<T: AsRef<[u8]>, V: IntoIterator<Item = T>>(vocab: V) -> Self {
         let vocab: Vec<_> = vocab
             .into_iter()
-            .map(|token| CompactBytes::new(token.as_ref()))
+            .map(|token| SmallToken::from(token.as_ref()))
             .collect();
         let sort_result = sort_vocab_with_trie(vocab.iter().map(|x| x.as_slice()));
         let sam_of_rev_tokens = build_sam_of_reversed_tokens(vocab.iter().map(|x| x.as_slice()));
@@ -42,7 +41,7 @@ impl VocabPrefixAutomaton {
         }
     }
 
-    pub fn vocab(&self) -> &[CompactBytes] {
+    pub fn vocab(&self) -> &[SmallToken] {
         &self.vocab
     }
 
@@ -54,7 +53,7 @@ impl VocabPrefixAutomaton {
         &self.rank
     }
 
-    pub fn get(&self, index: usize) -> Option<&CompactBytes> {
+    pub fn get(&self, index: usize) -> Option<&SmallToken> {
         self.vocab.get(index).filter(|t| !t.is_empty())
     }
 
@@ -89,7 +88,7 @@ impl VocabPrefixAutomaton {
     pub fn parse_rev_token_id_seq<S: IntoIterator<Item = usize>>(
         &self,
         rev_tokens: S,
-    ) -> Vec<(CompactBytes, SortedTokenRange)> {
+    ) -> Vec<(SmallToken, SortedTokenRange)> {
         let mut state = self.sam_of_rev_tokens.get_root_state();
         let mut res = Vec::new();
         let mut bytes_rev = Vec::new();
@@ -110,7 +109,7 @@ impl VocabPrefixAutomaton {
                 if let Some(cnt_info) = self.rank_range_on_sam[state.node_id].clone() {
                     let mut bytes = bytes_rev.clone();
                     bytes.reverse();
-                    res.push((CompactBytes::from(bytes), cnt_info));
+                    res.push((SmallToken::from(bytes.as_slice()), cnt_info));
                 }
             }
         }
