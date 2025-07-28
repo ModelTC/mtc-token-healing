@@ -120,11 +120,31 @@ impl VocabPrefixAutomaton {
 
 #[cfg(feature = "pyo3")]
 pub mod pyo3 {
-    use pyo3::{Bound, Python, pymethods, types::PyBytes};
+    use pyo3::{Bound, FromPyObject, IntoPyObject, Python, pymethods, types::PyBytes};
 
     use crate::{SortedTokenId, SortedTokenRange, TokenId};
 
     use super::VocabPrefixAutomaton;
+
+    #[derive(Debug, FromPyObject, IntoPyObject)]
+    enum TokenIdSeq {
+        TokenId(TokenId),
+        Seq(Vec<TokenId>),
+    }
+
+    impl TokenIdSeq {
+        fn map<F: FnMut(TokenId) -> TokenId>(self, mut f: F) -> Self {
+            match self {
+                Self::TokenId(id) => Self::TokenId(f(id)),
+                Self::Seq(mut items) => {
+                    items.iter_mut().for_each(|item| {
+                        *item = f(*item);
+                    });
+                    Self::Seq(items)
+                }
+            }
+        }
+    }
 
     #[pymethods]
     impl VocabPrefixAutomaton {
@@ -151,10 +171,11 @@ pub mod pyo3 {
         #[pyo3(name = "parse_bytes")]
         fn parse_bytes_py(
             &self,
+            py: Python<'_>,
             bytes: &[u8],
             start_from: usize,
         ) -> Vec<(usize, SortedTokenRange)> {
-            self.parse_bytes(bytes, start_from)
+            py.allow_threads(|| self.parse_bytes(bytes, start_from))
         }
 
         #[pyo3(name = "parse_tokens")]
@@ -163,10 +184,32 @@ pub mod pyo3 {
             py: Python<'py>,
             tokens: Vec<usize>,
         ) -> Vec<(Bound<'py, PyBytes>, SortedTokenRange)> {
-            self.parse_rev_token_id_seq(tokens.into_iter().rev())
-                .into_iter()
+            let res = py.allow_threads(|| self.parse_rev_token_id_seq(tokens.into_iter().rev()));
+            res.into_iter()
                 .map(|(b, c)| (PyBytes::new(py, &b), c))
                 .collect()
+        }
+
+        #[pyo3(name = "parse_tokens_str_suffix")]
+        fn parse_tokens_str_suffix_py(
+            &self,
+            py: Python<'_>,
+            tokens: Vec<usize>,
+        ) -> Vec<(String, SortedTokenRange)> {
+            py.allow_threads(|| {
+                self.parse_rev_token_id_seq(tokens.into_iter().rev())
+                    .into_iter()
+                    .filter_map(|(b, c)| String::from_utf8(b.into()).ok().map(|s| (s, c)))
+                    .collect()
+            })
+        }
+
+        fn get_original_token_ids(&self, py: Python<'_>, seq: TokenIdSeq) -> TokenIdSeq {
+            py.allow_threads(|| seq.map(|id| self.order.get(id as usize).copied().unwrap_or(id)))
+        }
+
+        fn get_sorted_token_ids(&self, py: Python<'_>, seq: TokenIdSeq) -> TokenIdSeq {
+            py.allow_threads(|| seq.map(|id| self.rank.get(id as usize).copied().unwrap_or(id)))
         }
     }
 }

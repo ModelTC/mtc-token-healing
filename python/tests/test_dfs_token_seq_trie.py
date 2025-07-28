@@ -34,7 +34,7 @@ def test_dfs_token_seq_trie():
 
     for i in range(len(nodes)):
         masks = [
-            j < i and nodes[j].subtree_upper >= nodes[i].subtree_upper
+            j <= i and nodes[j].subtree_upper >= nodes[i].subtree_upper
             for j in range(len(nodes))
         ]
         print("".join(map(str, map(int, masks))))

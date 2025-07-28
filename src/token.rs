@@ -29,7 +29,7 @@ mod _pyo3 {
     impl SortedTokenRange {
         pub(crate) fn repr_py(&self) -> String {
             let Self { lower, upper } = self;
-            format!("SortedTokenRange(lower={}, upper={})", lower, upper)
+            format!("SortedTokenRange(lower={lower}, upper={upper})")
         }
     }
 
