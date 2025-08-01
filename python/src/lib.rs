@@ -1,39 +1,9 @@
-use std::borrow::Cow;
+mod prefix_dfs;
 
-use ::mtc_token_healing::{
-    dfs_token_seq_trie, SortedTokenRange, TokenId, TokenSeqInput, TokenSeqTrieNode,
-    VocabPrefixAutomaton,
-};
+use ::mtc_token_healing::{SortedTokenRange, TokenId, VocabPrefixAutomaton};
 use pyo3::prelude::*;
 
-#[pyfunction(name = "dfs_token_seq_trie")]
-fn dfs_token_seq_trie_py(
-    token_ids: Vec<Vec<TokenId>>,
-    pred_rank_ranges: Vec<SortedTokenRange>,
-) -> (Vec<TokenSeqTrieNode>, usize) {
-    let inputs = token_ids
-        .into_iter()
-        .zip(pred_rank_ranges)
-        .map(|(s, r)| TokenSeqInput {
-            tokens: Cow::Owned(s),
-            pred_range: r,
-        })
-        .collect();
-    let nodes = dfs_token_seq_trie(inputs);
-    let parent_chain_len = {
-        let mut res = 0;
-        while res < nodes.len() {
-            let node = &nodes[res];
-            if node.parent == res.saturating_sub(1) && node.pred_range.is_none() {
-                res += 1;
-                continue;
-            }
-            break;
-        }
-        res
-    };
-    (nodes, parent_chain_len)
-}
+use crate::prefix_dfs::{dfs_token_seq_trie_py, TokenSeqTrieNode};
 
 #[pymodule]
 fn mtc_token_healing(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {

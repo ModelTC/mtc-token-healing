@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Tuple, overload
+from typing import Generic, Optional, Sequence, Tuple, TypeVar, overload
 
 TokenId = int
 SortedTokenId = int
@@ -35,14 +35,16 @@ class VocabPrefixAutomaton:
         self, token_ids: Sequence[TokenId]
     ) -> Sequence[SortedTokenId]: ...
 
-class TokenSeqTrieNode:
+Value = TypeVar("Value")
+
+class TokenSeqTrieNode(Generic[Value]):
     token: int
-    pred_range: Optional[SortedTokenRange]
     parent: int
     subtree_lower: int
     subtree_upper: int
+    depth: int
+    value: Optional[Value]
 
 def dfs_token_seq_trie(
-    token_ids_seq: Sequence[Sequence[int]],
-    pred_rank_ranges: Sequence[SortedTokenRange],
-) -> Tuple[Sequence[TokenSeqTrieNode], int]: ...
+    token_ids_seq_and_values: Sequence[Tuple[Sequence[TokenId], Value]],
+) -> Tuple[Sequence[TokenSeqTrieNode[Value]], int]: ...

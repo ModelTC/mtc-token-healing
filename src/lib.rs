@@ -11,12 +11,10 @@
 //! is the same as walking to the state on the suffix automaton
 //! and gathering information among the subtree of the link tree.
 mod automaton;
-mod prefix_dfs;
 mod token;
 
 pub use crate::{
     automaton::VocabPrefixAutomaton,
-    prefix_dfs::{TokenSeqInput, TokenSeqTrieNode, dfs_token_seq_trie},
     token::{SmallToken, SortedTokenId, SortedTokenRange, TokenId},
 };
 

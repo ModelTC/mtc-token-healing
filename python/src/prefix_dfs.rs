@@ -1,55 +1,53 @@
 use std::{borrow::Cow, convert::Infallible};
 
 use general_sam::{BTreeTransTable, TravelEvent, Trie, TrieNodeAlike};
+use pyo3::{pyclass, pyfunction, pymethods, PyObject, PyResult, Python};
 
-use crate::{SortedTokenRange, TokenId};
+use crate::TokenId;
 
-#[derive(Clone, Debug)]
-#[cfg_attr(feature = "pyo3", ::pyo3::pyclass(get_all, set_all))]
+#[derive(Debug)]
+#[pyclass(get_all, set_all)]
 pub struct TokenSeqTrieNode {
     pub parent: usize,
     pub subtree_lower: usize,
     pub subtree_upper: usize,
+    pub depth: usize,
     pub token: TokenId,
-    pub pred_range: Option<SortedTokenRange>,
+    pub value: Option<PyObject>,
 }
 
-#[cfg(feature = "pyo3")]
-mod _pyo3 {
-    use pyo3::pymethods;
-
-    use super::TokenSeqTrieNode;
-
-    #[pymethods]
-    impl TokenSeqTrieNode {
-        fn __repr__(&self) -> String {
-            let Self {
-                parent,
-                subtree_lower,
-                subtree_upper,
-                token,
-                pred_range,
-            } = self;
-            let pred_range = pred_range
-                .as_ref()
-                .map(|r| r.repr_py())
-                .unwrap_or("None".to_owned());
-            format!(
-                "TokenSeqTrieNode(\
+#[pymethods]
+impl TokenSeqTrieNode {
+    fn __repr__<'py>(&self, py: Python<'py>) -> PyResult<String> {
+        let Self {
+            parent,
+            subtree_lower,
+            subtree_upper,
+            depth,
+            token,
+            value,
+        } = self;
+        let value = value
+            .as_ref()
+            .map(|v| v.call_method0(py, "__repr__")?.extract::<String>(py))
+            .transpose()?
+            .unwrap_or("None".to_owned());
+        Ok(format!(
+            "TokenSeqTrieNode(\
                 token={token}, \
-                pred_range={pred_range}, \
                 parent={parent}, \
                 subtree_lower={subtree_lower}, \
-                subtree_upper={subtree_upper})",
-            )
-        }
+                subtree_upper={subtree_upper}, \
+                depth={depth}, \
+                value={value})",
+        ))
     }
 }
 
 #[derive(Debug)]
 pub struct TokenSeqInput<'a> {
     pub tokens: Cow<'a, [TokenId]>,
-    pub pred_range: SortedTokenRange,
+    pub value: Option<PyObject>,
 }
 
 pub fn dfs_token_seq_trie(inputs: Vec<TokenSeqInput>) -> Vec<TokenSeqTrieNode> {
@@ -80,8 +78,9 @@ pub fn dfs_token_seq_trie(inputs: Vec<TokenSeqInput>) -> Vec<TokenSeqTrieNode> {
                         parent,
                         subtree_lower: dfs_order_id,
                         subtree_upper: dfs_order_id,
+                        depth: 0,
                         token,
-                        pred_range: None,
+                        value: None,
                     });
                 }
                 TravelEvent::Pop(node, _) => {
@@ -99,22 +98,71 @@ pub fn dfs_token_seq_trie(inputs: Vec<TokenSeqInput>) -> Vec<TokenSeqTrieNode> {
         Err(e) => match e {},
     }
 
+    for i in 0..dfs_order.len() {
+        let parent = dfs_order[i].parent;
+        if parent == i {
+            continue;
+        }
+        dfs_order[i].depth = dfs_order[parent].depth + 1;
+    }
+
     for (input, node_id) in inputs.into_iter().zip(seq_last_trie_node_ids) {
         if let Some(id) = rank[node_id] {
-            dfs_order[id].pred_range = Some(input.pred_range);
+            dfs_order[id].value = input.value;
         }
     }
 
     #[cfg(debug_assertions)]
     for (i, node) in dfs_order.iter().enumerate() {
         debug_assert!(node.subtree_lower <= node.subtree_upper);
+        debug_assert!(node.subtree_lower == i);
+        debug_assert!(node.parent <= i);
         if node.parent < node.subtree_lower {
             debug_assert!(node.parent != i);
             let parent = &dfs_order[node.parent];
             debug_assert!(parent.subtree_lower < node.subtree_lower);
             debug_assert!(parent.subtree_upper >= node.subtree_lower);
+        } else {
+            debug_assert!(node.parent == i);
         }
     }
 
     dfs_order
+}
+
+#[pyfunction(name = "dfs_token_seq_trie")]
+pub fn dfs_token_seq_trie_py<'py>(
+    py: Python<'py>,
+    inputs: Vec<(Vec<TokenId>, Option<PyObject>)>,
+) -> (Vec<TokenSeqTrieNode>, usize) {
+    debug_assert!(inputs
+        .iter()
+        .all(|(_, o)| o.as_ref().is_none_or(|v| !v.is_none(py))));
+
+    py.allow_threads(|| {
+        let inputs = inputs
+            .into_iter()
+            .map(|(s, v)| TokenSeqInput {
+                tokens: Cow::Owned(s),
+                value: v,
+            })
+            .collect();
+
+        let nodes = dfs_token_seq_trie(inputs);
+
+        let parent_chain_len = {
+            let mut res = 0;
+            while res < nodes.len() {
+                let node = &nodes[res];
+                if node.parent == res.saturating_sub(1) && node.value.is_none() {
+                    res += 1;
+                    continue;
+                }
+                break;
+            }
+            res
+        };
+
+        (nodes, parent_chain_len)
+    })
 }
