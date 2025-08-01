@@ -1,7 +1,7 @@
 use std::{borrow::Cow, convert::Infallible};
 
 use general_sam::{BTreeTransTable, TravelEvent, Trie, TrieNodeAlike};
-use pyo3::{pyclass, pyfunction, pymethods, PyObject, PyResult, Python};
+use pyo3::{PyObject, PyResult, Python, pyclass, pyfunction, pymethods};
 
 use crate::TokenId;
 
@@ -135,9 +135,11 @@ pub fn dfs_token_seq_trie_py<'py>(
     py: Python<'py>,
     inputs: Vec<(Vec<TokenId>, Option<PyObject>)>,
 ) -> (Vec<TokenSeqTrieNode>, usize) {
-    debug_assert!(inputs
-        .iter()
-        .all(|(_, o)| o.as_ref().is_none_or(|v| !v.is_none(py))));
+    debug_assert!(
+        inputs
+            .iter()
+            .all(|(_, o)| o.as_ref().is_none_or(|v| !v.is_none(py)))
+    );
 
     py.allow_threads(|| {
         let inputs = inputs
