@@ -11,6 +11,9 @@ homepage = "https://github.com/ModelTC/mtc-token-healing"
 documentation = "https://docs.rs/mtc-token-healing"
 authors = ["Chielo Newctle <ChieloNewctle@gmail.com>"]
 
+[workspace.dependencies]
+general-sam = { version = "1.0.1", features = ["trie"] }
+
 [package]
 name = "mtc-token-healing"
 version.workspace = true
@@ -26,7 +29,7 @@ exclude = ["release-plz.toml", ".github", "python"]
 
 [dependencies]
 derive_more = { version = "2.0.1", features = ["deref", "as_ref"] }
-general-sam = { version = "1.0.1", features = ["trie"] }
+general-sam = { workspace = true }
 pyo3 = { version = "0.25.0", optional = true }
 thiserror = "2.0.12"
 tinyvec = { version = "1.9.0", features = ["alloc"] }
