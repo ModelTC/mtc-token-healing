@@ -1,17 +1,18 @@
 use std::{borrow::Cow, convert::Infallible};
 
 use general_sam::{BTreeTransTable, TravelEvent, Trie, TrieNodeAlike};
-use pyo3::{PyObject, PyResult, Python, pyclass, pyfunction, pymethods};
+use pyo3::{pyclass, pyfunction, pymethods, PyObject, PyResult, Python};
 
 use crate::TokenId;
 
 #[derive(Debug)]
-#[pyclass(get_all, set_all)]
+#[pyclass(get_all, set_all, generic)]
 pub struct TokenSeqTrieNode {
     pub parent: usize,
     pub subtree_lower: usize,
     pub subtree_upper: usize,
     pub depth: usize,
+    pub num_children: usize,
     pub token: TokenId,
     pub value: Option<PyObject>,
 }
@@ -24,6 +25,7 @@ impl TokenSeqTrieNode {
             subtree_lower,
             subtree_upper,
             depth,
+            num_children,
             token,
             value,
         } = self;
@@ -39,6 +41,7 @@ impl TokenSeqTrieNode {
                 subtree_lower={subtree_lower}, \
                 subtree_upper={subtree_upper}, \
                 depth={depth}, \
+                num_children={num_children}, \
                 value={value})",
         ))
     }
@@ -79,6 +82,7 @@ pub fn dfs_token_seq_trie(inputs: Vec<TokenSeqInput>) -> Vec<TokenSeqTrieNode> {
                         subtree_lower: dfs_order_id,
                         subtree_upper: dfs_order_id,
                         depth: 0,
+                        num_children: 0,
                         token,
                         value: None,
                     });
@@ -87,6 +91,7 @@ pub fn dfs_token_seq_trie(inputs: Vec<TokenSeqInput>) -> Vec<TokenSeqTrieNode> {
                     if let Some(id) = rank[node.node_id] {
                         if let Some(parent) = node.get_node().and_then(|n| rank[n.get_parent()]) {
                             dfs_order[parent].subtree_upper = dfs_order[id].subtree_upper;
+                            dfs_order[parent].num_children += 1;
                         }
                     }
                 }
@@ -135,11 +140,9 @@ pub fn dfs_token_seq_trie_py<'py>(
     py: Python<'py>,
     inputs: Vec<(Vec<TokenId>, Option<PyObject>)>,
 ) -> (Vec<TokenSeqTrieNode>, usize) {
-    debug_assert!(
-        inputs
-            .iter()
-            .all(|(_, o)| o.as_ref().is_none_or(|v| !v.is_none(py)))
-    );
+    debug_assert!(inputs
+        .iter()
+        .all(|(_, o)| o.as_ref().is_none_or(|v| !v.is_none(py))));
 
     py.allow_threads(|| {
         let inputs = inputs
@@ -152,11 +155,11 @@ pub fn dfs_token_seq_trie_py<'py>(
 
         let nodes = dfs_token_seq_trie(inputs);
 
-        let parent_chain_len = {
+        let prefill_chain_len = {
             let mut res = 0;
             while res < nodes.len() {
                 let node = &nodes[res];
-                if node.parent == res.saturating_sub(1) && node.value.is_none() {
+                if node.num_children == 1 && node.value.is_none() {
                     res += 1;
                     continue;
                 }
@@ -165,6 +168,6 @@ pub fn dfs_token_seq_trie_py<'py>(
             res
         };
 
-        (nodes, parent_chain_len)
+        (nodes, prefill_chain_len)
     })
 }
