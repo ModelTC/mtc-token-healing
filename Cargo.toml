@@ -28,23 +28,23 @@ readme = "README.md"
 exclude = ["release-plz.toml", ".github", "python"]
 
 [dependencies]
-derive_more = { version = "2.0.1", features = ["deref", "as_ref"] }
+derive_more = { version = "2.0.1", features = ["deref", "as_ref", "from"] }
 general-sam = { workspace = true }
-pyo3 = { version = "0.25.0", optional = true }
-thiserror = "2.0.12"
-tinyvec = { version = "1.9.0", features = ["alloc"] }
+pyo3 = { version = "0.26.0", optional = true }
+thiserror = "2.0.16"
+tinyvec = { version = "1.10.0", features = ["alloc"] }
 
 [features]
 pyo3 = ["dep:pyo3"]
 
 [dev-dependencies]
-clap = { version = "4.5.40", features = ["derive", "env"] }
+clap = { version = "4.5.47", features = ["derive", "env"] }
 color-eyre = "0.6.5"
-rand = "0.9.1"
-regex = "1.11.1"
-serde_json = "1.0.140"
-tokenizers = { version = "0.21.1", features = ["hf-hub", "http"] }
-tokio = { version = "1.45.1", features = ["rt-multi-thread"] }
+rand = "0.9.2"
+regex = "1.11.2"
+serde_json = "1.0.143"
+tokenizers = { version = "0.22.0", features = ["hf-hub", "http"] }
+tokio = { version = "1.47.1", features = ["rt-multi-thread"] }
 
 [package.metadata.docs.rs]
 all-features = true

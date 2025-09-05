@@ -175,7 +175,7 @@ pub mod pyo3 {
             bytes: &[u8],
             start_from: usize,
         ) -> Vec<(usize, SortedTokenRange)> {
-            py.allow_threads(|| self.parse_bytes(bytes, start_from))
+            py.detach(|| self.parse_bytes(bytes, start_from))
         }
 
         #[pyo3(name = "parse_tokens")]
@@ -184,7 +184,7 @@ pub mod pyo3 {
             py: Python<'py>,
             tokens: Vec<usize>,
         ) -> Vec<(Bound<'py, PyBytes>, SortedTokenRange)> {
-            let res = py.allow_threads(|| self.parse_rev_token_id_seq(tokens.into_iter().rev()));
+            let res = py.detach(|| self.parse_rev_token_id_seq(tokens.into_iter().rev()));
             res.into_iter()
                 .map(|(b, c)| (PyBytes::new(py, &b), c))
                 .collect()
@@ -196,7 +196,7 @@ pub mod pyo3 {
             py: Python<'_>,
             tokens: Vec<usize>,
         ) -> Vec<(String, SortedTokenRange)> {
-            py.allow_threads(|| {
+            py.detach(|| {
                 self.parse_rev_token_id_seq(tokens.into_iter().rev())
                     .into_iter()
                     .filter_map(|(b, c)| String::from_utf8(b.into()).ok().map(|s| (s, c)))
@@ -205,11 +205,11 @@ pub mod pyo3 {
         }
 
         fn get_original_token_ids(&self, py: Python<'_>, seq: TokenIdSeq) -> TokenIdSeq {
-            py.allow_threads(|| seq.map(|id| self.order.get(id as usize).copied().unwrap_or(id)))
+            py.detach(|| seq.map(|id| self.order.get(id as usize).copied().unwrap_or(id)))
         }
 
         fn get_sorted_token_ids(&self, py: Python<'_>, seq: TokenIdSeq) -> TokenIdSeq {
-            py.allow_threads(|| seq.map(|id| self.rank.get(id as usize).copied().unwrap_or(id)))
+            py.detach(|| seq.map(|id| self.rank.get(id as usize).copied().unwrap_or(id)))
         }
     }
 }
