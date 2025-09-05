@@ -43,8 +43,24 @@ class TokenSeqTrieNode(Generic[Value]):
     subtree_lower: int
     subtree_upper: int
     depth: int
+    num_children: int
     value: Optional[Value]
 
+class TokenSeqTrie(Generic[Value]):
+    tokens: Sequence[int]
+    parents: Sequence[int]
+    subtree_lower_seq: Sequence[int]
+    subtree_upper_seq: Sequence[int]
+    depths: Sequence[int]
+    num_children_seq: Sequence[int]
+    values: Sequence[Optional[Value]]
+
+    def __len__(self) -> int: ...
+
 def dfs_token_seq_trie(
-    token_ids_seq_and_values: Sequence[Tuple[Sequence[TokenId], Value]],
+    sequences: Sequence[Sequence[int]],
+    values: Sequence[Value],
+) -> Tuple[TokenSeqTrie, int]: ...
+def dfs_token_seq_trie_as_nodes(
+    sequences_and_values: Sequence[Tuple[Sequence[int], Value]],
 ) -> Tuple[Sequence[TokenSeqTrieNode[Value]], int]: ...

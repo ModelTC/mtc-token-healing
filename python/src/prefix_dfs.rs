@@ -1,11 +1,13 @@
 use std::{borrow::Cow, convert::Infallible};
 
+use derive_more::{From, Into};
 use general_sam::{BTreeTransTable, TravelEvent, Trie, TrieNodeAlike};
-use pyo3::{pyclass, pyfunction, pymethods, PyObject, PyResult, Python};
+use itertools::{Itertools, multiunzip};
+use pyo3::{Py, PyAny, PyErr, PyResult, Python, pyclass, pyfunction, pymethods};
 
 use crate::TokenId;
 
-#[derive(Debug)]
+#[derive(Debug, Into)]
 #[pyclass(get_all, set_all, generic)]
 pub struct TokenSeqTrieNode {
     pub parent: usize,
@@ -14,7 +16,7 @@ pub struct TokenSeqTrieNode {
     pub depth: usize,
     pub num_children: usize,
     pub token: TokenId,
-    pub value: Option<PyObject>,
+    pub value: Option<Py<PyAny>>,
 }
 
 #[pymethods]
@@ -47,13 +49,65 @@ impl TokenSeqTrieNode {
     }
 }
 
-#[derive(Debug)]
-pub struct TokenSeqInput<'a> {
-    pub tokens: Cow<'a, [TokenId]>,
-    pub value: Option<PyObject>,
+#[derive(Debug, From)]
+#[pyclass(get_all, set_all, generic)]
+pub struct TokenSeqTrie {
+    pub parents: Vec<usize>,
+    pub subtree_lower_seq: Vec<usize>,
+    pub subtree_upper_seq: Vec<usize>,
+    pub depths: Vec<usize>,
+    pub num_children_seq: Vec<usize>,
+    pub tokens: Vec<TokenId>,
+    pub values: Vec<Option<Py<PyAny>>>,
 }
 
-pub fn dfs_token_seq_trie(inputs: Vec<TokenSeqInput>) -> Vec<TokenSeqTrieNode> {
+#[pymethods]
+impl TokenSeqTrie {
+    fn __repr__<'py>(&self, py: Python<'py>) -> PyResult<String> {
+        let Self {
+            parents,
+            subtree_lower_seq,
+            subtree_upper_seq,
+            depths,
+            num_children_seq,
+            tokens,
+            values,
+        } = self;
+        let values = values.iter().map(|opt| {
+            opt.as_ref()
+                .map(|v| {
+                    Ok::<_, PyErr>(Cow::Owned(
+                        v.call_method0(py, "__repr__")?.extract::<String>(py)?,
+                    ))
+                })
+                .unwrap_or(Ok(Cow::Borrowed("None")))
+        });
+        let values_repr = Itertools::intersperse_with(values, || Ok(Cow::Borrowed(", ")))
+            .collect::<Result<String, _>>()?;
+        Ok(format!(
+            "TokenSeqTrie(\
+                tokens={tokens:?}, \
+                parents={parents:?}, \
+                subtree_lower_seq={subtree_lower_seq:?}, \
+                subtree_upper_seq={subtree_upper_seq:?}, \
+                depths={depths:?}, \
+                num_children_seq={num_children_seq:?}, \
+                values=[{values_repr}])",
+        ))
+    }
+
+    fn __len__(&self) -> usize {
+        self.parents.len()
+    }
+}
+
+#[derive(Debug)]
+struct TokenSeqInput<'a> {
+    pub tokens: Cow<'a, [TokenId]>,
+    pub value: Option<Py<PyAny>>,
+}
+
+fn dfs_token_seq_trie(inputs: Vec<TokenSeqInput>) -> Vec<TokenSeqTrieNode> {
     let (trie, seq_last_trie_node_ids) = {
         let mut trie = Trie::<BTreeTransTable<_>>::default();
         let mut seq_last_node_ids = vec![0; inputs.len()];
@@ -135,16 +189,18 @@ pub fn dfs_token_seq_trie(inputs: Vec<TokenSeqInput>) -> Vec<TokenSeqTrieNode> {
     dfs_order
 }
 
-#[pyfunction(name = "dfs_token_seq_trie")]
+#[pyfunction(name = "dfs_token_seq_trie_as_nodes")]
 pub fn dfs_token_seq_trie_py<'py>(
     py: Python<'py>,
-    inputs: Vec<(Vec<TokenId>, Option<PyObject>)>,
+    inputs: Vec<(Vec<TokenId>, Option<Py<PyAny>>)>,
 ) -> (Vec<TokenSeqTrieNode>, usize) {
-    debug_assert!(inputs
-        .iter()
-        .all(|(_, o)| o.as_ref().is_none_or(|v| !v.is_none(py))));
+    debug_assert!(
+        inputs
+            .iter()
+            .all(|(_, o)| o.as_ref().is_none_or(|v| !v.is_none(py)))
+    );
 
-    py.allow_threads(|| {
+    py.detach(|| {
         let inputs = inputs
             .into_iter()
             .map(|(s, v)| TokenSeqInput {
@@ -169,5 +225,21 @@ pub fn dfs_token_seq_trie_py<'py>(
         };
 
         (nodes, prefill_chain_len)
+    })
+}
+
+#[pyfunction(name = "dfs_token_seq_trie")]
+pub fn dfs_token_seq_trie_soa_py<'py>(
+    py: Python<'py>,
+    sequences: Vec<Vec<TokenId>>,
+    values: Vec<Option<Py<PyAny>>>,
+) -> (TokenSeqTrie, usize) {
+    let (res, prefill_chain_len) =
+        dfs_token_seq_trie_py(py, sequences.into_iter().zip(values).collect());
+    py.detach(|| {
+        let soa = TokenSeqTrie::from(multiunzip(
+            res.into_iter().map(Into::<(_, _, _, _, _, _, _)>::into),
+        ));
+        (soa, prefill_chain_len)
     })
 }
