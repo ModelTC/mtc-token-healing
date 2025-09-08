@@ -40,30 +40,25 @@ def test_dfs_trie_value_on_prefix_chain():
 
 
 def run_test_dfs_token_seq_trie(tokens_seq, pred_ranges):
-    nodes, pre_len = dfs_token_seq_trie(list(zip(tokens_seq, pred_ranges)))
+    tree, pre_len = dfs_token_seq_trie(tokens_seq, pred_ranges)
 
-    print(f"{pre_len=}")
-    print([node.token for node in nodes])
-    print([node.depth for node in nodes])
-    print([node.subtree_upper for node in nodes])
-
-    for q, node in enumerate(nodes):
-        if node.value is None:
+    for q in range(len(tree.values)):
+        if tree.values[q] is None:
             continue
         seq = []
         for j in range(q):
-            if nodes[j].subtree_upper >= node.subtree_upper:
-                seq.append(nodes[j].token)
-        seq.append(node.token)
-        print(seq, node.value)
+            if tree.subtree_upper_seq[j] >= tree.subtree_upper_seq[q]:
+                seq.append(tree.tokens[j])
+        seq.append(tree.tokens[q])
+        print(seq, tree.values[q])
         assert seq in tokens_seq
-        assert pred_ranges[tokens_seq.index(seq)] == node.value
-        assert node.depth + 1 == len(seq)
+        assert pred_ranges[tokens_seq.index(seq)] == tree.values[q]
+        assert tree.depths[q] + 1 == len(seq)
 
-    for q in range(len(nodes)):
+    for q in range(len(tree.values)):
         masks = [
-            k <= q and nodes[k].subtree_upper >= nodes[q].subtree_upper
-            for k in range(len(nodes))
+            k <= q and tree.subtree_upper_seq[k] >= tree.subtree_upper_seq[q]
+            for k in range(len(tree.values))
         ]
         print("".join(map(str, map(int, masks))))
 
