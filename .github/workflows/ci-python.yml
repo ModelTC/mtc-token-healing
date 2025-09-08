@@ -182,6 +182,7 @@ jobs:
     permissions:
       # Used to upload release artifacts
       contents: write
+      id-token: write
     steps:
       - uses: actions/download-artifact@v5
         with:
@@ -189,8 +190,6 @@ jobs:
           merge-multiple: true
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
-        env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         with:
           command: upload
           args: --non-interactive --skip-existing *
