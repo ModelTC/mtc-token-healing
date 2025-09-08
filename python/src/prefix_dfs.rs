@@ -2,8 +2,8 @@ use std::{borrow::Cow, convert::Infallible};
 
 use derive_more::{From, Into};
 use general_sam::{BTreeTransTable, TravelEvent, Trie, TrieNodeAlike};
-use itertools::{multiunzip, Itertools};
-use pyo3::{pyclass, pyfunction, pymethods, Py, PyAny, PyErr, PyResult, Python};
+use itertools::{Itertools, multiunzip};
+use pyo3::{Py, PyAny, PyErr, PyResult, Python, pyclass, pyfunction, pymethods};
 
 use crate::TokenId;
 
@@ -194,9 +194,11 @@ pub fn dfs_token_seq_trie_py<'py>(
     py: Python<'py>,
     inputs: Vec<(Vec<TokenId>, Option<Py<PyAny>>)>,
 ) -> (Vec<TokenSeqTrieNode>, usize) {
-    debug_assert!(inputs
-        .iter()
-        .all(|(_, o)| o.as_ref().is_none_or(|v| !v.is_none(py))));
+    debug_assert!(
+        inputs
+            .iter()
+            .all(|(_, o)| o.as_ref().is_none_or(|v| !v.is_none(py)))
+    );
 
     py.detach(|| {
         let inputs = inputs
