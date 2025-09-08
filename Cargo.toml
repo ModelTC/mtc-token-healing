@@ -12,7 +12,7 @@ documentation = "https://docs.rs/mtc-token-healing"
 authors = ["Chielo Newctle <ChieloNewctle@gmail.com>"]
 
 [workspace.dependencies]
-general-sam = { version = "1.0.1", features = ["trie"] }
+general-sam = { version = "1.0.3", features = ["trie"] }
 
 [package]
 name = "mtc-token-healing"

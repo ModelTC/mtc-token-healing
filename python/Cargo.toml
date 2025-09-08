@@ -15,8 +15,13 @@ name = "mtc_token_healing"
 crate-type = ["cdylib"]
 
 [dependencies]
-mtc-token-healing = { version = "0.3.0", path = "..", features = ["pyo3"] }
-general-sam = { workspace = true }
-pyo3 = { version = "0.26.0", features = ["extension-module", "generate-import-lib", "abi3-py310"] }
-itertools = "0.14.0"
 derive_more = { version = "2.0.1", features = ["from", "into"] }
+general-sam = { workspace = true }
+itertools = "0.14.0"
+mtc-token-healing = { version = "0.3.0", path = "..", features = ["pyo3"] }
+pyo3 = { version = "0.26.0", features = ["extension-module", "generate-import-lib", "abi3-py310"] }
+
+[profile.release]
+lto = true
+strip = true
+opt-level = "z"
