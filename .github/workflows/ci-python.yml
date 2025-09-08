@@ -1,17 +1,13 @@
 name: Build & Test the Python Bindings
-
 defaults:
   run:
     working-directory: python
-
 on:
   push:
   pull_request:
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   format:
     name: Check Python format
@@ -28,7 +24,6 @@ jobs:
         run: ruff check .
       - name: Black
         run: black --check --diff .
-
   rustfmt:
     name: Check Rust format
     runs-on: ubuntu-latest
@@ -39,14 +34,12 @@ jobs:
       - run: rustup update stable && rustup default stable
       - run: rustup component add rustfmt
       - run: cargo fmt --all --check
-
   test:
     name: Run tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-
     steps:
       - uses: actions/checkout@v5
         with:
@@ -70,7 +63,6 @@ jobs:
           working-directory: python
           sccache: true
           manylinux: auto
-
   linux:
     runs-on: ubuntu-latest
     strategy:
@@ -121,7 +113,6 @@ jobs:
             pip3 install -U pip
             pip3 install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
             pytest --import-mode=importlib
-
   windows:
     runs-on: windows-latest
     strategy:
@@ -154,7 +145,37 @@ jobs:
           set -e
           pip install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
           pytest --import-mode=importlib
-
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: python
+          target: ${{ matrix.target }}
+          args: --release --out dist --interpreter 3.10
+          sccache: true
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-${{ matrix.target }}
+          path: dist
+      - name: pytest
+        if: ${{ !startsWith(matrix.target, 'aarch64') }}
+        shell: bash
+        run: |
+          set -e
+          pip install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
+          pytest --import-mode=importlib
   sdist:
     needs: [test]
     runs-on: ubuntu-latest
@@ -173,7 +194,6 @@ jobs:
         with:
           name: wheels-sdist
           path: python/dist
-
   release:
     name: Release
     runs-on: ubuntu-latest

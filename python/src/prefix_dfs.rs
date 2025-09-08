@@ -142,11 +142,11 @@ fn dfs_token_seq_trie(inputs: Vec<TokenSeqInput>) -> Vec<TokenSeqTrieNode> {
                     });
                 }
                 TravelEvent::Pop(node, _) => {
-                    if let Some(id) = rank[node.node_id] {
-                        if let Some(parent) = node.get_node().and_then(|n| rank[n.get_parent()]) {
-                            dfs_order[parent].subtree_upper = dfs_order[id].subtree_upper;
-                            dfs_order[parent].num_children += 1;
-                        }
+                    if let Some(id) = rank[node.node_id]
+                        && let Some(parent) = node.get_node().and_then(|n| rank[n.get_parent()])
+                    {
+                        dfs_order[parent].subtree_upper = dfs_order[id].subtree_upper;
+                        dfs_order[parent].num_children += 1;
                     }
                 }
             }
