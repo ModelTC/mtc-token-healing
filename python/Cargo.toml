@@ -20,8 +20,3 @@ general-sam = { workspace = true }
 itertools = "0.14.0"
 mtc-token-healing = { version = "0.3.0", path = "..", features = ["pyo3"] }
 pyo3 = { version = "0.26.0", features = ["extension-module", "generate-import-lib", "abi3-py310"] }
-
-[profile.release]
-lto = true
-strip = true
-opt-level = "z"
