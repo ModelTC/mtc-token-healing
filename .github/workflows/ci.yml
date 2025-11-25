@@ -48,6 +48,7 @@ jobs:
       - run: rustup update nightly && rustup default nightly
       - run: cargo +nightly doc --all-features --no-deps
   dependabot:
+    name: Dependabot Auto-merge
     if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'}}
     needs: [build-and-test, rustfmt, docs]
     runs-on: ubuntu-latest
