@@ -29,7 +29,7 @@ exclude = ["release-plz.toml", ".github", "python"]
 
 [dependencies]
 general-sam = { workspace = true }
-pyo3 = { version = "0.26.0", optional = true }
+pyo3 = { version = "0.27.1", optional = true }
 tinyvec = { version = "1.10.0", features = ["alloc"] }
 
 [features]
