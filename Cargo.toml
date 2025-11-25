@@ -50,4 +50,3 @@ all-features = true
 [profile.release]
 lto = true
 strip = true
-opt-level = "z"
