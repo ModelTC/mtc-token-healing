@@ -55,6 +55,7 @@ jobs:
     permissions:
       pull-requests: write
       contents: write
+      actions: write
     steps:
       - id: metadata
         uses: dependabot/fetch-metadata@v2
