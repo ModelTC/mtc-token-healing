@@ -17,6 +17,6 @@ crate-type = ["cdylib"]
 [dependencies]
 derive_more = { version = "2.0.1", features = ["from", "into"] }
 general-sam = { workspace = true }
-itertools = "0.14.0"
+itertools = "0.15.0"
 mtc-token-healing = { version = "0.3.0", path = "..", features = ["pyo3"] }
 pyo3 = { version = "0.27.1", features = ["extension-module", "generate-import-lib", "abi3-py310"] }
