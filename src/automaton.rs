@@ -1,11 +1,9 @@
 use general_sam::{BoxBisectTable, GeneralSam};
 
-use crate::{
-    SmallToken, SortedTokenId, SortedTokenRange, TokenId,
-    token::{
-        build_sam_of_reversed_tokens, label_rank_range_on_sam_of_rev_tokens, sort_vocab_with_trie,
-    },
+use crate::token::{
+    build_sam_of_reversed_tokens, label_rank_range_on_sam_of_rev_tokens, sort_vocab_with_trie,
 };
+use crate::{SmallToken, SortedTokenId, SortedTokenRange, TokenId};
 
 #[derive(Debug)]
 #[cfg_attr(feature = "pyo3", ::pyo3::pyclass(frozen))]
@@ -120,7 +118,8 @@ impl VocabPrefixAutomaton {
 
 #[cfg(feature = "pyo3")]
 pub mod pyo3 {
-    use pyo3::{Bound, FromPyObject, IntoPyObject, Python, pymethods, types::PyBytes};
+    use pyo3::types::PyBytes;
+    use pyo3::{Bound, FromPyObject, IntoPyObject, Python, pymethods};
 
     use crate::{SortedTokenId, SortedTokenRange, TokenId};
 

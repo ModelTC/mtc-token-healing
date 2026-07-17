@@ -13,10 +13,8 @@
 mod automaton;
 mod token;
 
-pub use crate::{
-    automaton::VocabPrefixAutomaton,
-    token::{SmallToken, SortedTokenId, SortedTokenRange, TokenId},
-};
+pub use crate::automaton::VocabPrefixAutomaton;
+pub use crate::token::{SmallToken, SortedTokenId, SortedTokenRange, TokenId};
 
 #[cfg(test)]
 mod tests;

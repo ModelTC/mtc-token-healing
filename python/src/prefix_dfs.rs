@@ -1,4 +1,5 @@
-use std::{borrow::Cow, convert::Infallible};
+use std::borrow::Cow;
+use std::convert::Infallible;
 
 use derive_more::{From, Into};
 use general_sam::{BTreeTransTable, TravelEvent, Trie, TrieNodeAlike};
