@@ -7,18 +7,6 @@
 
 Token healing implementation in Rust.
 
-## Usage
-
-See [`examples/rand-infer.rs`](examples/rand-infer.rs).
-
-```sh
-echo '"def helloworl"' | cargo run --example rand-infer
-```
-
-```sh
-echo '"def hellowor<unk>l"' | cargo run --example rand-infer
-```
-
 ## TODOs
 
 - [x] Python bindings
@@ -26,8 +14,8 @@ echo '"def hellowor<unk>l"' | cargo run --example rand-infer
 
 ## License
 
-- &copy; 2024 Chielo Newctle \<[ChieloNewctle@gmail.com](mailto:ChieloNewctle@gmail.com)\>
-- &copy; 2024 ModelTC Team
+- &copy; 2024-2026 ModelTC Team (Chielo
+  \<[mail@chielo.org](mailto:mail@chielo.org)\>)
 
 This project is licensed under either of
 
