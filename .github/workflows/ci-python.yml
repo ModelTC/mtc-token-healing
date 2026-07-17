@@ -1,7 +1,4 @@
 name: Build & Test the Python Bindings
-defaults:
-  run:
-    working-directory: python
 on:
   push:
   pull_request:
@@ -12,12 +9,21 @@ jobs:
   format:
     name: Check Python format
     runs-on: ubuntu-latest
+    defaults: &run-in-python
+      run:
+        shell: bash
+        working-directory: python
     steps:
-      - uses: actions/checkout@v7
+      - &checkout
+        name: Checkout repository
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
       - name: Install dependencies
         run: pip install ruff black
       - name: Ruff
@@ -27,29 +33,27 @@ jobs:
   rustfmt:
     name: Check Rust format
     runs-on: ubuntu-latest
+    defaults: *run-in-python
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - run: rustup update stable && rustup default stable
+      - *checkout
+      - run: rustup update nightly && rustup default nightly
       - run: rustup component add rustfmt
       - run: cargo fmt --all --check
-  test:
+  tests:
     name: Run tests
     runs-on: ubuntu-latest
+    defaults: *run-in-python
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
+      - *checkout
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install locally
-        run: pip install -e ".[test]"
+        run: pip install -e ".[tests]"
       - name: Install additional dependencies
         run: pip install pytest-md pytest-emoji
       - uses: pavelzw/pytest-action@v2
@@ -64,125 +68,91 @@ jobs:
           sccache: true
           manylinux: auto
   linux:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [x86_64]
+        target:
+          - arch: x86_64
+            os: ubuntu-latest
+          - arch: aarch64
+            os: ubuntu-24.04-arm
+    runs-on: ${{ matrix.target.os }}
+    defaults: *run-in-python
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v6
+      - *checkout
+      - &setup-python
+        uses: actions/setup-python@v6
         with:
           python-version: "3.10"
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           working-directory: python
-          target: ${{ matrix.target }}
           args: --release --out dist --interpreter 3.10
           sccache: true
           manylinux: auto
       - name: Upload wheels
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
-          name: wheels-linux-${{ matrix.target }}
+          name: wheels-linux-${{ matrix.target.arch }}
           path: python/dist
-      - name: pytest
-        if: ${{ startsWith(matrix.target, 'x86_64') }}
-        shell: bash
+      - &pytest
+        name: Run pytest
         run: |
           set -e
-          pip install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
+          WHEEL="$(find dist -maxdepth 1 -type f -name 'mtc_token_healing-*.whl' -print -quit)"
+          pip install "$WHEEL"[tests] --force-reinstall
           pytest --import-mode=importlib
-      - name: pytest
-        if: ${{ !startsWith(matrix.target, 'x86') && matrix.target != 'ppc64' }}
-        uses: uraimo/run-on-arch-action@v3
-        with:
-          arch: ${{ matrix.target }}
-          distro: bookworm
-          githubToken: ${{ github.token }}
-          install: |
-            apt-get update
-            apt-get install -y --no-install-recommends python3-full
-          run: |
-            set -e
-            cd python
-            python3 -m venv venv
-            . venv/bin/activate
-            pip3 install -U pip
-            pip3 install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
-            pytest --import-mode=importlib
   windows:
-    runs-on: windows-latest
     strategy:
       matrix:
-        target: [x64]
+        target:
+          - arch: x86_64
+            os: windows-latest
+    runs-on: ${{ matrix.target.os }}
+    defaults: *run-in-python
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.10"
-          architecture: ${{ matrix.target }}
+      - *checkout
+      - *setup-python
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           working-directory: python
-          target: ${{ matrix.target }}
           args: --release --out dist --interpreter 3.10
           sccache: true
       - name: Upload wheels
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
-          name: wheels-windows-${{ matrix.target }}
+          name: wheels-windows-${{ matrix.target.arch }}
           path: python/dist
-      - name: pytest
-        if: ${{ !startsWith(matrix.target, 'aarch64') }}
-        shell: bash
-        run: |
-          set -e
-          pip install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
-          pytest --import-mode=importlib
+      - *pytest
   macos:
-    runs-on: macos-latest
     strategy:
       matrix:
-        target: [x86_64, aarch64]
+        target:
+          - arch: aarch64
+            os: macos-latest
+    runs-on: ${{ matrix.target.os }}
+    defaults: *run-in-python
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.10"
+      - *checkout
+      - *setup-python
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           working-directory: python
-          target: ${{ matrix.target }}
           args: --release --out dist --interpreter 3.10
           sccache: true
       - name: Upload wheels
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
-          name: wheels-macos-${{ matrix.target }}
-          path: dist
-      - name: pytest
-        if: ${{ !startsWith(matrix.target, 'aarch64') }}
-        shell: bash
-        run: |
-          set -e
-          pip install --pre "mtc_token_healing[test]" --find-links dist --force-reinstall
-          pytest --import-mode=importlib
+          name: wheels-macos-${{ matrix.target.arch }}
+          path: python/dist
+      - *pytest
   sdist:
-    needs: [test]
+    needs: [tests]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
+      - *checkout
       - name: Build sdist
         uses: PyO3/maturin-action@v1
         with:
@@ -190,32 +160,36 @@ jobs:
           command: sdist
           args: --out dist
       - name: Upload sdist
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-sdist
           path: python/dist
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/')"
-    needs: [test, format, rustfmt, linux, windows, sdist]
+    if: ${{ startsWith(github.ref, 'refs/tags/') && github.repository_owner == 'ModelTC' }}
+    needs: [tests, format, rustfmt, linux, windows, macos, sdist]
     permissions:
-      # Used to upload release artifacts
-      contents: write
       id-token: write
+      contents: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - uses: actions/download-artifact@v8
         with:
-          pattern: wheels-*
+          path: dist
           merge-multiple: true
-      - name: Publish to PyPI
-        uses: PyO3/maturin-action@v1
+      - name: Generate artifact attestation
+        uses: actions/attest@v4
         with:
-          command: upload
-          args: --non-interactive --skip-existing *
+          subject-path: "dist/*"
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
       - name: Upload to GitHub Release
+        if: ${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, 'dev') }}
         uses: softprops/action-gh-release@v3
         with:
+          working_directory: dist
           files: |
             *.whl
             *.tar.gz
