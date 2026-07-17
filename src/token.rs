@@ -14,7 +14,7 @@ pub type SmallToken = TinyVec<[u8; 28]>;
 const _: () = [(); 1][(core::mem::size_of::<SmallToken>() == 32) as usize ^ 1];
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-#[cfg_attr(feature = "pyo3", pyo3::pyclass(get_all, set_all))]
+#[cfg_attr(feature = "pyo3", pyo3::pyclass(get_all, set_all, skip_from_py_object))]
 pub struct SortedTokenRange {
     pub lower: SortedTokenId,
     pub upper: SortedTokenId,
