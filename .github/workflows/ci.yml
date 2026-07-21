@@ -12,6 +12,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
 jobs:
   style:
     name: Style
@@ -39,9 +42,9 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
       - name: Build documentation
+        run: cargo doc --all-features --no-deps
         env:
           RUSTDOCFLAGS: --cfg doc_cfg
-        run: cargo doc --all-features --no-deps
 
   tests:
     name: Tests
