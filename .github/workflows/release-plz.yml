@@ -21,7 +21,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-          ref: ${{ github.event.workflow_run.head_sha }}
       - &install-rust
         name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
