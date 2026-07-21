@@ -25,7 +25,7 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 readme = "README.md"
-exclude = ["release-plz.toml", ".github", "python"]
+exclude = ["release-plz.toml", "rustfmt.toml", ".github", "python"]
 
 [package.metadata.docs.rs]
 all-features = true
