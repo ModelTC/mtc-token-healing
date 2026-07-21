@@ -12,7 +12,7 @@ homepage = "https://github.com/ModelTC/mtc-token-healing"
 documentation = "https://docs.rs/mtc-token-healing"
 
 [workspace.dependencies]
-general-sam = { version = "1.0.4", features = ["trie"] }
+general-sam = { version = "1.0.5", features = ["trie"] }
 pyo3 = "0.29.0"
 
 [package]
