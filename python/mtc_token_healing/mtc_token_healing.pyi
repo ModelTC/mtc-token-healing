@@ -1,4 +1,5 @@
-from typing import Generic, Optional, Sequence, Tuple, TypeVar, overload
+from collections.abc import Sequence
+from typing import Generic, TypeVar, overload
 
 TokenId = int
 SortedTokenId = int
@@ -15,13 +16,13 @@ class VocabPrefixAutomaton:
     def vocab_size(self) -> int: ...
     def get_order(self) -> Sequence[TokenId]: ...
     def get_rank(self) -> Sequence[SortedTokenId]: ...
-    def parse_bytes(self, inputs: bytes) -> Sequence[Tuple[int, SortedTokenRange]]: ...
+    def parse_bytes(self, inputs: bytes) -> Sequence[tuple[int, SortedTokenRange]]: ...
     def parse_tokens(
         self, token_ids: Sequence[TokenId]
-    ) -> Sequence[Tuple[bytes, SortedTokenRange]]: ...
+    ) -> Sequence[tuple[bytes, SortedTokenRange]]: ...
     def parse_tokens_str_suffix(
         self, token_ids: Sequence[TokenId]
-    ) -> Sequence[Tuple[str, SortedTokenRange]]: ...
+    ) -> Sequence[tuple[str, SortedTokenRange]]: ...
     @overload
     def get_original_token_ids(self, sorted_token_id: SortedTokenId) -> TokenId: ...
     @overload
@@ -35,32 +36,32 @@ class VocabPrefixAutomaton:
         self, token_ids: Sequence[TokenId]
     ) -> Sequence[SortedTokenId]: ...
 
-Value = TypeVar("Value")
+_Value = TypeVar("_Value")
 
-class TokenSeqTrieNode(Generic[Value]):
+class TokenSeqTrieNode(Generic[_Value]):
     token: int
     parent: int
     subtree_lower: int
     subtree_upper: int
     depth: int
     num_children: int
-    value: Optional[Value]
+    value: _Value | None
 
-class TokenSeqTrie(Generic[Value]):
+class TokenSeqTrie(Generic[_Value]):
     tokens: Sequence[int]
     parents: Sequence[int]
     subtree_lower_seq: Sequence[int]
     subtree_upper_seq: Sequence[int]
     depths: Sequence[int]
     num_children_seq: Sequence[int]
-    values: Sequence[Optional[Value]]
+    values: Sequence[_Value | None]
 
     def __len__(self) -> int: ...
 
 def dfs_token_seq_trie(
     sequences: Sequence[Sequence[int]],
-    values: Sequence[Value],
-) -> Tuple[TokenSeqTrie, int]: ...
+    values: Sequence[_Value],
+) -> tuple[TokenSeqTrie, int]: ...
 def dfs_token_seq_trie_as_nodes(
-    sequences_and_values: Sequence[Tuple[Sequence[int], Value]],
-) -> Tuple[Sequence[TokenSeqTrieNode[Value]], int]: ...
+    sequences_and_values: Sequence[tuple[Sequence[int], _Value]],
+) -> tuple[Sequence[TokenSeqTrieNode[_Value]], int]: ...
