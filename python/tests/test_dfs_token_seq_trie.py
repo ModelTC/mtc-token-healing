@@ -40,7 +40,7 @@ def test_dfs_trie_value_on_prefix_chain():
 
 
 def run_test_dfs_token_seq_trie(tokens_seq, pred_ranges):
-    tree, pre_len = dfs_token_seq_trie(tokens_seq, pred_ranges)
+    tree, _pre_len = dfs_token_seq_trie(tokens_seq, pred_ranges)
 
     for q in range(len(tree.values)):
         if tree.values[q] is None:
