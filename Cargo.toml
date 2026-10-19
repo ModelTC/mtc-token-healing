@@ -13,7 +13,7 @@ documentation = "https://docs.rs/mtc-token-healing"
 
 [workspace.dependencies]
 general-sam = { version = "1.0.5", features = ["trie"] }
-pyo3 = "0.29.0"
+pyo3 = "0.30.1"
 
 [package]
 name = "mtc-token-healing"
