@@ -13,7 +13,7 @@ documentation = "https://docs.rs/mtc-token-healing"
 
 [workspace.dependencies]
 general-sam = { version = "1.0.5", features = ["trie"] }
-pyo3 = "0.29.0"
+pyo3 = "0.30.1"
 
 [package]
 name = "mtc-token-healing"
@@ -33,7 +33,7 @@ all-features = true
 [dependencies]
 general-sam = { workspace = true }
 pyo3 = { workspace = true, optional = true }
-tinyvec = { version = "1.12.0", features = ["alloc"] }
+tinyvec = { version = "1.13.3", features = ["alloc"] }
 
 [features]
 pyo3 = ["dep:pyo3"]
